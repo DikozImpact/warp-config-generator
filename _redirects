@@ -1,2 +1,3 @@
+/warp* https://generator.22dikoz22.workers.dev/warp* 200
 /static/* /public/static/:splat 200
 /* /index.html 200
