@@ -1,12 +1,12 @@
-const fetch = require('node-fetch');
-const nacl = require('tweetnacl');
-const { Buffer } = require('buffer');
+// Используем ES Modules вместо CommonJS
+import nacl from 'tweetnacl';
 
+// Функция для генерации ключей
 function generateKeys() {
     const keyPair = nacl.box.keyPair();
     return {
-        privKey: Buffer.from(keyPair.secretKey).toString('base64'),
-        pubKey: Buffer.from(keyPair.publicKey).toString('base64')
+        privKey: btoa(String.fromCharCode(...keyPair.secretKey)), // Преобразуем Uint8Array в base64
+        pubKey: btoa(String.fromCharCode(...keyPair.publicKey)), // Преобразуем Uint8Array в base64
     };
 }
 
@@ -34,6 +34,7 @@ async function apiRequest(method, endpoint, body = null, token = null) {
     return response.json();
 }
 
+// Функция для генерации конфига WARP
 async function generateWarpConfig() {
     const { privKey, pubKey } = generateKeys();
 
@@ -85,16 +86,13 @@ Endpoint = 188.114.97.66:3138`;
 }
 
 // Основная функция для генерации ссылки на скачивание конфига
-async function getWarpConfigLink() {
+export async function getWarpConfigLink() {
     try {
         const conf = await generateWarpConfig();
-        const confBase64 = Buffer.from(conf).toString('base64');
+        const confBase64 = btoa(conf); // Преобразуем строку в base64
         return `${confBase64}`;
     } catch (error) {
         console.error('Ошибка при генерации конфига:', error);
         return null;
     }
 }
-
-// Экспортируем функцию для использования
-module.exports = { getWarpConfigLink };
