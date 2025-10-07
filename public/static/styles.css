@@ -52,7 +52,7 @@ body {
     align-items: center;
     margin-bottom: 10px; /* Отступ снизу */
     width: 100%; /* Занимает всю ширину */
-    max-width: 400px; /* Ограничиваем ширину, как у контейнера */\
+    max-width: 400px; /* Ограничиваем ширину, как у контейнера */
 }
 
 .amnezia-icon {
@@ -408,7 +408,7 @@ transform: none;
   transform: rotate(60deg);
 }
 
-}
+
 @keyframes rot {
   from {
     transform: rotate(-100deg);
@@ -565,4 +565,130 @@ word-break: break-all;}
 	.grid-container {
         grid-template-columns: none;
         grid-auto-columns: 100%;}
+}
+
+/* Стили для модального окна hCaptcha */
+#captchaModal {
+    display: none;
+    position: fixed;
+    z-index: 10000; /* Выше других модальных окон */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s;
+}
+
+#captchaModal .modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 30px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    max-width: 400px;
+    min-width: 320px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s;
+    position: relative;
+}
+
+#captchaModal h3 {
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+    text-align: center;
+}
+
+#captchaModal .close {
+    color: #aaa;
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+#captchaModal .close:hover,
+#captchaModal .close:focus {
+    color: #000;
+}
+
+/* Контейнер для виджета капчи */
+#captchaModal > .modal-content > div:nth-child(3) {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+#verifyCaptchaButton {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #eeac43, #f15874);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-bottom: 0;
+}
+
+#verifyCaptchaButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#verifyCaptchaButton:active {
+    transform: translateY(0);
+}
+
+#captchaError {
+    color: #d32f2f;
+    margin-top: 10px;
+    font-size: 14px;
+    text-align: center;
+    display: none;
+}
+
+/* Анимации для модального окна капчи */
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 600px) {
+    #captchaModal .modal-content {
+        margin: 20% auto;
+        padding: 20px;
+        width: 90%;
+        min-width: auto;
+    }
+    
+    #captchaModal h3 {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+    
+    #verifyCaptchaButton {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 350px) {
+    #captchaModal .modal-content {
+        padding: 15px;
+    }
 }

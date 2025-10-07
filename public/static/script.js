@@ -1,6 +1,73 @@
-async function generateConfig() {
-    const button = document.getElementById('generateButton');
-    const button_text = document.querySelector('#generateButton .button__text');
+// Глобальные переменные для хранения текущего действия
+let currentAction = null;
+let currentEndpoint = null;
+let pendingRequestData = null;
+
+// Функция для показа модального окна капчи
+function showCaptchaModal(action, endpoint, requestData = null) {
+    currentAction = action;
+    currentEndpoint = endpoint;
+    pendingRequestData = requestData;
+    
+    const modal = document.getElementById('captchaModal');
+    modal.style.display = 'block';
+    
+    // Рендерим капчу если еще не отрендерена
+    if (hcaptchaWidgetId === null && typeof hcaptcha !== 'undefined') {
+        try {
+            hcaptchaWidgetId = hcaptcha.render(document.querySelector('.h-captcha'), {
+                sitekey: 'YOUR_SITE_KEY_HERE' // Замените на ваш Site Key
+            });
+        } catch (e) {
+            console.error('Ошибка рендеринга hCaptcha:', e);
+        }
+    } else if (typeof hcaptcha !== 'undefined') {
+        // Сбрасываем капчу если уже была отрендерена
+        hcaptcha.reset(hcaptchaWidgetId);
+    }
+}
+
+// Функция для скрытия модального окна капчи
+function closeCaptchaModal() {
+    const modal = document.getElementById('captchaModal');
+    modal.style.display = 'none';
+    
+    if (typeof hcaptcha !== 'undefined') {
+        hcaptcha.reset();
+    }
+    
+    document.getElementById('captchaError').style.display = 'none';
+    currentAction = null;
+    currentEndpoint = null;
+    pendingRequestData = null;
+}
+
+// Обработчик закрытия модального окна капчи
+document.getElementById('closeCaptcha').addEventListener('click', closeCaptchaModal);
+
+// Обработчик кнопки подтверждения капчи
+document.getElementById('verifyCaptchaButton').addEventListener('click', async function() {
+    const captchaToken = hcaptcha.getResponse();
+    const errorDiv = document.getElementById('captchaError');
+    
+    if (!captchaToken) {
+        errorDiv.textContent = 'Пожалуйста, пройдите проверку капчи';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    errorDiv.style.display = 'none';
+    closeCaptchaModal();
+    
+    // Выполняем отложенное действие с токеном капчи
+    if (currentAction) {
+        await currentAction(captchaToken);
+    }
+});
+
+// Универсальная функция для генерации конфига с капчей
+async function generateConfigWithCaptcha(endpoint, filename, button, captchaToken) {
+    const button_text = document.querySelector(`#${button.id} .button__text`);
     const status = document.getElementById('status');
     const info = document.getElementById('info');
     const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
@@ -12,18 +79,31 @@ async function generateConfig() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warps?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
+        const requestData = {
+            captchaToken: captchaToken,
+            dns: selectedDNS,
+            allowedIPs: allowedIPs
+        };
+
+        const response = await fetch(`/${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        });
+
         const data = await response.json();
 
         if (data.success) {
             const downloadFile = () => {
                 const link = document.createElement('a');
                 link.href = 'data:application/octet-stream;base64,' + data.content;
-                link.download = `WARPr_${randomNumber}.conf`;
+                link.download = filename.replace('{random}', randomNumber);
                 link.click();
             };
 
-            button_text.textContent = `Скачать WARPr_${randomNumber}.conf`;
+            button_text.textContent = `Скачать ${filename.replace('{random}', randomNumber)}`;
             button.onclick = downloadFile;
             downloadFile();
         } else {
@@ -36,354 +116,373 @@ async function generateConfig() {
         button.classList.remove("button--loading");
     }
     info.textContent = status.textContent;
+}
+
+// Функция для генерации конфига (оборачивает в капчу)
+async function generateConfig() {
+    const button = document.getElementById('generateButton');
+    showCaptchaModal(
+        (token) => generateConfigWithCaptcha('warps', 'WARPr_{random}.conf', button, token),
+        'warps'
+    );
 }
 
 async function generateConfig2() {
     const button = document.getElementById('generateButton2');
-    const button_text = document.querySelector('#generateButton2 .button__text');
-    const status = document.getElementById('status');
-	const info = document.getElementById('info');
-    const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
+    showCaptchaModal(
+        async (captchaToken) => {
+            const button_text = document.querySelector('#generateButton2 .button__text');
+            const status = document.getElementById('status');
+            const info = document.getElementById('info');
+            const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
 
-    // Изменяем состояние кнопки на загрузку
-    button.disabled = true;
-    button.classList.add("button--loading");
+            button.disabled = true;
+            button.classList.add("button--loading");
 
-    try {
-        const response = await fetch(`/warp2`);
-        const data = await response.json();
+            try {
+                const response = await fetch('/warp2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ captchaToken })
+                });
+                
+                const data = await response.json();
 
-        if (data.success) {
-            const downloadFile = () => {
-                const link = document.createElement('a');
-                link.href = 'data:application/octet-stream;base64,' + data.content;
-                link.download = `KaringWARP_${randomNumber}.conf`;
-                link.click();
-            };
+                if (data.success) {
+                    const downloadFile = () => {
+                        const link = document.createElement('a');
+                        link.href = 'data:application/octet-stream;base64,' + data.content;
+                        link.download = `KaringWARP_${randomNumber}.conf`;
+                        link.click();
+                    };
 
-            button_text.textContent = `Скачать KaringWARP_${randomNumber}.conf`;
-            button.onclick = downloadFile;
-            downloadFile();
-        } else {
-            status.textContent = 'Ошибка: ' + data.message;
-        }
-    } catch (error) {
-        status.textContent = 'Произошла ошибка при генерации.';
-    } finally {
-        button.disabled = false;
-        button.classList.remove("button--loading");
-    }
-	 info.textContent = status.textContent
+                    button_text.textContent = `Скачать KaringWARP_${randomNumber}.conf`;
+                    button.onclick = downloadFile;
+                    downloadFile();
+                } else {
+                    status.textContent = 'Ошибка: ' + data.message;
+                }
+            } catch (error) {
+                status.textContent = 'Произошла ошибка при генерации.';
+            } finally {
+                button.disabled = false;
+                button.classList.remove("button--loading");
+            }
+            info.textContent = status.textContent;
+        },
+        'warp2'
+    );
 }
 
 async function generateConfig3() {
     const button = document.getElementById('generateButton3');
-    const button_text = document.querySelector('#generateButton3 .button__text');
-    const status = document.getElementById('status');
-	const info = document.getElementById('info');
-    const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
+    showCaptchaModal(
+        async (captchaToken) => {
+            const button_text = document.querySelector('#generateButton3 .button__text');
+            const status = document.getElementById('status');
+            const info = document.getElementById('info');
+            const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
 
-    // Изменяем состояние кнопки на загрузку
-    button.disabled = true;
-    button.classList.add("button--loading");
+            button.disabled = true;
+            button.classList.add("button--loading");
 
-    try {
-        const response = await fetch(`/warp3`);
-        const data = await response.json();
+            try {
+                const response = await fetch('/warp3', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ captchaToken })
+                });
+                
+                const data = await response.json();
 
-        if (data.success) {
-            const downloadFile = () => {
-                const link = document.createElement('a');
-                link.href = 'data:application/octet-stream;base64,' + data.content;
-                link.download = `WARPinWARP_${randomNumber}.conf`;
-                link.click();
-            };
+                if (data.success) {
+                    const downloadFile = () => {
+                        const link = document.createElement('a');
+                        link.href = 'data:application/octet-stream;base64,' + data.content;
+                        link.download = `WARPinWARP_${randomNumber}.conf`;
+                        link.click();
+                    };
 
-            button_text.textContent = `Скачать WARPinWARP_${randomNumber}.conf`;
-            button.onclick = downloadFile;
-            downloadFile();
-        } else {
-            status.textContent = 'Ошибка: ' + data.message;
-        }
-    } catch (error) {
-        status.textContent = 'Произошла ошибка при генерации.';
-    } finally {
-        button.disabled = false;
-        button.classList.remove("button--loading");
-    }
-	 info.textContent = status.textContent
+                    button_text.textContent = `Скачать WARPinWARP_${randomNumber}.conf`;
+                    button.onclick = downloadFile;
+                    downloadFile();
+                } else {
+                    status.textContent = 'Ошибка: ' + data.message;
+                }
+            } catch (error) {
+                status.textContent = 'Произошла ошибка при генерации.';
+            } finally {
+                button.disabled = false;
+                button.classList.remove("button--loading");
+            }
+            info.textContent = status.textContent;
+        },
+        'warp3'
+    );
 }
 
 async function generateConfig4() {
     const button = document.getElementById('generateButton4');
-    const button_text = document.querySelector('#generateButton4 .button__text');
-    const status = document.getElementById('status');
-    const info = document.getElementById('info');
-    const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
-
-    // Получаем выбранный DNS и разрешённые IP-адреса
-    const selectedDNS = getSelectedDNS();
-    const allowedIPs = getSelectedSites();
-
-    button.disabled = true;
-    button.classList.add("button--loading");
-
-    try {
-        // Передаём DNS и allowedIPs в запросе
-        const response = await fetch(`/warp4s?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
-        const data = await response.json();
-
-        if (data.success) {
-            const downloadFile = () => {
-                const link = document.createElement('a');
-                link.href = 'data:application/octet-stream;base64,' + data.content;
-                link.download = `WARPm2_${randomNumber}.conf`;
-                link.click();
-            };
-
-            button_text.textContent = `Скачать WARPm2_${randomNumber}.conf`;
-            button.onclick = downloadFile;
-            downloadFile();
-        } else {
-            status.textContent = 'Ошибка: ' + data.message;
-        }
-    } catch (error) {
-        status.textContent = 'Произошла ошибка при генерации.';
-    } finally {
-        button.disabled = false;
-        button.classList.remove("button--loading");
-    }
-    info.textContent = status.textContent;
+    showCaptchaModal(
+        (token) => generateConfigWithCaptcha('warp4s', 'WARPm2_{random}.conf', button, token),
+        'warp4s'
+    );
 }
 
 async function generateConfig5() {
     const button = document.getElementById('generateButton5');
-    const button_text = document.querySelector('#generateButton5 .button__text');
-    const status = document.getElementById('status');
-	const info = document.getElementById('info');
-    const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
+    showCaptchaModal(
+        async (captchaToken) => {
+            const button_text = document.querySelector('#generateButton5 .button__text');
+            const status = document.getElementById('status');
+            const info = document.getElementById('info');
+            const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
 
-    // Изменяем состояние кнопки на загрузку
-    button.disabled = true;
-    button.classList.add("button--loading");
+            button.disabled = true;
+            button.classList.add("button--loading");
 
-    try {
-        const response = await fetch(`/warp5`);
-        const data = await response.json();
+            try {
+                const response = await fetch('/warp5', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ captchaToken })
+                });
+                
+                const data = await response.json();
 
-        if (data.success) {
-            const downloadFile = () => {
-                const link = document.createElement('a');
-                link.href = 'data:application/octet-stream;base64,' + data.content;
-                link.download = `NekoWARP_${randomNumber}.conf`;
-                link.click();
-            };
+                if (data.success) {
+                    const downloadFile = () => {
+                        const link = document.createElement('a');
+                        link.href = 'data:application/octet-stream;base64,' + data.content;
+                        link.download = `NekoWARP_${randomNumber}.conf`;
+                        link.click();
+                    };
 
-            button_text.textContent = `Скачать NekoWARP_${randomNumber}.conf`;
-            button.onclick = downloadFile;
-            downloadFile();
-        } else {
-            status.textContent = 'Ошибка: ' + data.message;
-        }
-    } catch (error) {
-        status.textContent = 'Произошла ошибка при генерации.';
-    } finally {
-        button.disabled = false;
-        button.classList.remove("button--loading");
-    }
-	 info.textContent = status.textContent
+                    button_text.textContent = `Скачать NekoWARP_${randomNumber}.conf`;
+                    button.onclick = downloadFile;
+                    downloadFile();
+                } else {
+                    status.textContent = 'Ошибка: ' + data.message;
+                }
+            } catch (error) {
+                status.textContent = 'Произошла ошибка при генерации.';
+            } finally {
+                button.disabled = false;
+                button.classList.remove("button--loading");
+            }
+            info.textContent = status.textContent;
+        },
+        'warp5'
+    );
 }
 
 async function generateConfig6() {
     const button = document.getElementById('generateButton6');
-    const button_text = document.querySelector('#generateButton6 .button__text');
-    const status = document.getElementById('status');
-    const info = document.getElementById('info');
-    const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
-
-    const selectedDNS = getSelectedDNS();
-    const allowedIPs = getSelectedSites();
-
-    button.disabled = true;
-    button.classList.add("button--loading");
-
-    try {
-        const response = await fetch(`/warp6s?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
-        const data = await response.json();
-
-        if (data.success) {
-            const downloadFile = () => {
-                const link = document.createElement('a');
-                link.href = 'data:application/octet-stream;base64,' + data.content;
-                link.download = `WARPm1_${randomNumber}.conf`;
-                link.click();
-            };
-
-            button_text.textContent = `Скачать WARPm1_${randomNumber}.conf`;
-            button.onclick = downloadFile;
-            downloadFile();
-        } else {
-            status.textContent = 'Ошибка: ' + data.message;
-        }
-    } catch (error) {
-        status.textContent = 'Произошла ошибка при генерации.';
-    } finally {
-        button.disabled = false;
-        button.classList.remove("button--loading");
-    }
-    info.textContent = status.textContent;
+    showCaptchaModal(
+        (token) => generateConfigWithCaptcha('warp6s', 'WARPm1_{random}.conf', button, token),
+        'warp6s'
+    );
 }
 
 async function generateConfig7() {
     const button = document.getElementById('generateButton7');
-    const button_text = document.querySelector('#generateButton7 .button__text');
-    const status = document.getElementById('status');
-	const info = document.getElementById('info');
-    const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
+    showCaptchaModal(
+        async (captchaToken) => {
+            const button_text = document.querySelector('#generateButton7 .button__text');
+            const status = document.getElementById('status');
+            const info = document.getElementById('info');
+            const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
 
-    // Изменяем состояние кнопки на загрузку
-    button.disabled = true;
-    button.classList.add("button--loading");
+            button.disabled = true;
+            button.classList.add("button--loading");
 
-    try {
-        const response = await fetch(`/warp7`);
-        const data = await response.json();
+            try {
+                const response = await fetch('/warp7', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ captchaToken })
+                });
+                
+                const data = await response.json();
 
-        if (data.success) {
-            const downloadFile = () => {
-                const link = document.createElement('a');
-                link.href = 'data:application/octet-stream;base64,' + data.content;
-                link.download = `ClashWARP_${randomNumber}.yaml`;
-                link.click();
-            };
+                if (data.success) {
+                    const downloadFile = () => {
+                        const link = document.createElement('a');
+                        link.href = 'data:application/octet-stream;base64,' + data.content;
+                        link.download = `ClashWARP_${randomNumber}.yaml`;
+                        link.click();
+                    };
 
-            button_text.textContent = `Скачать ClashWARP_${randomNumber}.yaml`;
-            button.onclick = downloadFile;
-            downloadFile();
-        } else {
-            status.textContent = 'Ошибка: ' + data.message;
-        }
-    } catch (error) {
-        status.textContent = 'Произошла ошибка при генерации.';
-    } finally {
-        button.disabled = false;
-        button.classList.remove("button--loading");
-    }
-	 info.textContent = status.textContent
+                    button_text.textContent = `Скачать ClashWARP_${randomNumber}.yaml`;
+                    button.onclick = downloadFile;
+                    downloadFile();
+                } else {
+                    status.textContent = 'Ошибка: ' + data.message;
+                }
+            } catch (error) {
+                status.textContent = 'Произошла ошибка при генерации.';
+            } finally {
+                button.disabled = false;
+                button.classList.remove("button--loading");
+            }
+            info.textContent = status.textContent;
+        },
+        'warp7'
+    );
 }
 
 async function generateConfig8() {
     const button = document.getElementById('generateButton8');
-    const button_text = document.querySelector('#generateButton8 .button__text');
-    const status = document.getElementById('status');
-	const info = document.getElementById('info');
-    const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
+    showCaptchaModal(
+        async (captchaToken) => {
+            const button_text = document.querySelector('#generateButton8 .button__text');
+            const status = document.getElementById('status');
+            const info = document.getElementById('info');
+            const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
 
-    // Изменяем состояние кнопки на загрузку
-    button.disabled = true;
-    button.classList.add("button--loading");
+            button.disabled = true;
+            button.classList.add("button--loading");
 
-    try {
-        const response = await fetch(`/warp8`);
-        const data = await response.json();
+            try {
+                const response = await fetch('/warp8', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ captchaToken })
+                });
+                
+                const data = await response.json();
 
-        if (data.success) {
-            const downloadFile = () => {
-                const link = document.createElement('a');
-                link.href = 'data:application/octet-stream;base64,' + data.content;
-                link.download = `HusiWARP_${randomNumber}.conf`;
-                link.click();
-            };
+                if (data.success) {
+                    const downloadFile = () => {
+                        const link = document.createElement('a');
+                        link.href = 'data:application/octet-stream;base64,' + data.content;
+                        link.download = `HusiWARP_${randomNumber}.conf`;
+                        link.click();
+                    };
 
-            button_text.textContent = `Скачать HusiWARP_${randomNumber}.conf`;
-            button.onclick = downloadFile;
-            downloadFile();
-        } else {
-            status.textContent = 'Ошибка: ' + data.message;
-        }
-    } catch (error) {
-        status.textContent = 'Произошла ошибка при генерации.';
-    } finally {
-        button.disabled = false;
-        button.classList.remove("button--loading");
-    }
-	 info.textContent = status.textContent
+                    button_text.textContent = `Скачать HusiWARP_${randomNumber}.conf`;
+                    button.onclick = downloadFile;
+                    downloadFile();
+                } else {
+                    status.textContent = 'Ошибка: ' + data.message;
+                }
+            } catch (error) {
+                status.textContent = 'Произошла ошибка при генерации.';
+            } finally {
+                button.disabled = false;
+                button.classList.remove("button--loading");
+            }
+            info.textContent = status.textContent;
+        },
+        'warp8'
+    );
 }
 
 async function generateConfig9() {
     const button = document.getElementById('generateButton9');
-    const button_text = document.querySelector('#generateButton9 .button__text');
-    const status = document.getElementById('status');
-    const info = document.getElementById('info');
-    const modal2 = document.getElementById('ThroneModal');
-    const throneText = document.getElementById('throneText');
+    showCaptchaModal(
+        async (captchaToken) => {
+            const button_text = document.querySelector('#generateButton9 .button__text');
+            const status = document.getElementById('status');
+            const info = document.getElementById('info');
+            const modal2 = document.getElementById('ThroneModal');
+            const throneText = document.getElementById('throneText');
 
-    button.disabled = true;
-    button.classList.add("button--loading");
+            button.disabled = true;
+            button.classList.add("button--loading");
 
-    try {
-        const response = await fetch(`/warp9`);
-        const data = await response.json();
+            try {
+                const response = await fetch('/warp9', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ captchaToken })
+                });
+                
+                const data = await response.json();
 
-        if (data.success) {
-            // Декодируем base64 и вставляем в textarea
-            const conf = atob(data.content);
-            throneText.value = conf;
-            
-            // Показываем модальное окно
-            modal2.style.display = "block";
-            
-            button_text.textContent = "WARP";
-        } else {
-            status.textContent = 'Ошибка: ' + data.message;
-        }
-    } catch (error) {
-        status.textContent = 'Произошла ошибка при генерации.';
-    } finally {
-        button.disabled = false;
-        button.classList.remove("button--loading");
-    }
-    info.textContent = status.textContent;
+                if (data.success) {
+                    const conf = atob(data.content);
+                    throneText.value = conf;
+                    modal2.style.display = "block";
+                    button_text.textContent = "WARP";
+                } else {
+                    status.textContent = 'Ошибка: ' + data.message;
+                }
+            } catch (error) {
+                status.textContent = 'Произошла ошибка при генерации.';
+            } finally {
+                button.disabled = false;
+                button.classList.remove("button--loading");
+            }
+            info.textContent = status.textContent;
+        },
+        'warp9'
+    );
 }
 
 async function generateConfig10() {
     const button = document.getElementById('generateButton10');
-    const button_text = document.querySelector('#generateButton10 .button__text');
-    const status = document.getElementById('status');
-	const info = document.getElementById('info');
-    const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
+    showCaptchaModal(
+        async (captchaToken) => {
+            const button_text = document.querySelector('#generateButton10 .button__text');
+            const status = document.getElementById('status');
+            const info = document.getElementById('info');
+            const randomNumber = Math.floor(Math.random() * (99 - 10 + 1)) + 10;
 
-    // Изменяем состояние кнопки на загрузку
-    button.disabled = true;
-    button.classList.add("button--loading");
+            button.disabled = true;
+            button.classList.add("button--loading");
 
-    try {
-        const response = await fetch(`/warp10`);
-        const data = await response.json();
+            try {
+                const response = await fetch('/warp10', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ captchaToken })
+                });
+                
+                const data = await response.json();
 
-        if (data.success) {
-            const downloadFile = () => {
-                const link = document.createElement('a');
-                link.href = 'data:application/octet-stream;base64,' + data.content;
-                link.download = `ClashWARP_${randomNumber}.yaml`;
-                link.click();
-            };
+                if (data.success) {
+                    const downloadFile = () => {
+                        const link = document.createElement('a');
+                        link.href = 'data:application/octet-stream;base64,' + data.content;
+                        link.download = `ClashWARP_${randomNumber}.yaml`;
+                        link.click();
+                    };
 
-            button_text.textContent = `Скачать ClashWARP_${randomNumber}.yaml`;
-            button.onclick = downloadFile;
-            downloadFile();
-        } else {
-            status.textContent = 'Ошибка: ' + data.message;
-        }
-    } catch (error) {
-        status.textContent = 'Произошла ошибка при генерации.';
-    } finally {
-        button.disabled = false;
-        button.classList.remove("button--loading");
-    }
-	 info.textContent = status.textContent
+                    button_text.textContent = `Скачать ClashWARP_${randomNumber}.yaml`;
+                    button.onclick = downloadFile;
+                    downloadFile();
+                } else {
+                    status.textContent = 'Ошибка: ' + data.message;
+                }
+            } catch (error) {
+                status.textContent = 'Произошла ошибка при генерации.';
+            } finally {
+                button.disabled = false;
+                button.classList.remove("button--loading");
+            }
+            info.textContent = status.textContent;
+        },
+        'warp10'
+    );
 }
 
+// Привязка кнопок
+document.getElementById('generateButton').onclick = generateConfig;
 document.getElementById('generateButton2').onclick = generateConfig2;
 document.getElementById('generateButton3').onclick = generateConfig3;
 document.getElementById('generateButton4').onclick = generateConfig4;
@@ -393,8 +492,6 @@ document.getElementById('generateButton7').onclick = generateConfig7;
 document.getElementById('generateButton8').onclick = generateConfig8;
 document.getElementById('generateButton9').onclick = generateConfig9;
 document.getElementById('generateButton10').onclick = generateConfig10;
-
-document.getElementById('generateButton').onclick = generateConfig;
 
 document.getElementById('telegramButton').onclick = function() {
     window.location.href = 'https://t.me/warp_1_1_1_1';
@@ -425,25 +522,25 @@ function getSelectedSites() {
         { id: 'st3', ip: '104.16.0.0/12, 104.244.40.0/21, 146.75.0.0/16, 151.101.0.0/16, 152.192.0.0/13, 162.158.0.0/15, 172.64.0.0/13, 192.229.128.0/17, 199.232.0.0/16, 209.237.192.0/19, 68.232.32.0/20, 69.195.160.0/19, 93.184.220.0/22' },
         { id: 'st4', ip: '102.0.0.0/8, 103.200.28.0/22, 103.214.160.0/20, 103.226.224.0/19, 103.228.130.0/23, 103.230.0.0/17, 103.240.180.0/22, 103.246.240.0/21, 103.252.96.0/19, 103.39.64.0/18, 103.42.0.0/16, 103.56.0.0/17, 103.73.160.0/21, 103.97.0.0/18, 103.97.128.0/18, 104.16.0.0/12, 104.244.40.0/21, 107.181.160.0/19, 108.160.160.0/20, 111.0.0.0/8, 114.0.0.0/10, 115.126.0.0/15, 116.64.0.0/10, 118.107.180.0/22, 118.128.0.0/9, 119.16.0.0/12, 122.0.0.0/10, 122.248.0.0/14, 124.0.0.0/9, 128.121.0.0/16, 128.242.0.0/16, 129.134.0.0/16, 130.211.0.0/16, 148.163.0.0/17, 150.107.0.0/18, 154.64.0.0/10, 156.233.0.0/16, 157.240.0.0/16, 159.106.0.0/16, 159.138.0.0/16, 159.65.0.0/16, 162.125.0.0/16, 162.220.8.0/21, 163.70.128.0/17, 168.143.0.0/16, 173.208.128.0/17, 173.231.0.0/18, 173.234.32.0/19, 173.236.128.0/17, 173.244.192.0/19, 173.252.192.0/18, 173.252.64.0/18, 173.255.192.0/18, 174.36.0.0/15, 179.60.0.0/16, 182.0.0.0/9, 184.172.0.0/15, 184.72.0.0/15, 185.45.4.0/22, 185.60.216.0/22, 192.133.76.0/22, 195.229.0.0/16, 198.27.64.0/18, 198.44.160.0/19, 199.16.156.0/22, 199.193.112.0/21, 199.59.148.0/22, 199.96.56.0/21, 202.160.0.0/15, 202.182.0.0/15, 202.52.0.0/14, 203.110.0.0/15, 204.79.196.0/23, 205.186.128.0/18, 208.0.0.0/11, 208.101.0.0/18, 208.43.0.0/16, 208.77.40.0/21, 209.95.32.0/19, 210.0.0.0/7, 212.95.183.192/26, 213.169.57.64/26, 23.224.0.0/15, 23.234.0.0/18, 23.96.0.0/13, 31.13.64.0/18, 38.0.0.0/7, 4.0.0.0/9, 43.226.16.0/20, 45.114.8.0/21, 45.76.0.0/15, 47.88.0.0/14, 50.117.0.0/17, 50.22.0.0/15, 50.87.0.0/16, 52.0.0.0/10, 52.160.0.0/11, 54.224.0.0/11, 54.64.0.0/11, 57.0.0.0/8, 59.0.0.0/9, 59.160.0.0/11, 64.13.192.0/18, 65.49.0.0/17, 66.220.144.0/20, 67.15.0.0/16, 67.228.0.0/16, 67.230.160.0/19, 69.162.128.0/18, 69.171.224.0/19, 69.197.128.0/18, 69.30.0.0/18, 69.50.192.0/19, 69.63.176.0/20, 74.86.0.0/16, 75.126.0.0/16, 80.87.198.0/23, 87.245.208.0/20, 88.191.249.0/24, 93.179.96.0/21, 96.44.128.0/18, 98.159.96.0/20' },
         { id: 'st5', ip: '102.0.0.0/8, 103.200.28.0/22, 103.226.224.0/19, 103.228.130.0/23, 103.230.0.0/17, 103.240.180.0/22, 103.246.240.0/21, 103.252.96.0/19, 103.42.0.0/16, 103.56.0.0/17, 103.73.160.0/21, 103.97.0.0/18, 103.97.128.0/18, 104.16.0.0/12, 104.244.40.0/21, 104.64.0.0/10, 107.181.160.0/19, 108.160.160.0/20, 111.0.0.0/8, 112.0.0.0/8, 114.0.0.0/10, 115.126.0.0/15, 116.64.0.0/10, 118.107.180.0/22, 118.128.0.0/9, 119.16.0.0/12, 122.0.0.0/10, 122.248.0.0/14, 124.0.0.0/9, 128.121.0.0/16, 128.242.0.0/16, 129.134.0.0/16, 13.104.0.0/14, 148.163.0.0/17, 150.107.0.0/18, 152.192.0.0/13, 154.64.0.0/10, 156.233.0.0/16, 157.240.0.0/16, 159.106.0.0/16, 159.138.0.0/16, 159.65.0.0/16, 162.125.0.0/16, 162.220.8.0/21, 163.70.128.0/17, 168.143.0.0/16, 173.208.128.0/17, 173.231.0.0/18, 173.236.128.0/17, 173.244.192.0/19, 173.252.192.0/18, 173.252.64.0/18, 173.255.192.0/18, 174.36.0.0/15, 179.60.0.0/16, 182.0.0.0/9, 184.172.0.0/15, 184.24.0.0/13, 184.50.0.0/15, 184.72.0.0/15, 185.45.4.0/22, 185.60.216.0/22, 192.133.76.0/22, 195.229.0.0/16, 198.27.64.0/18, 198.44.160.0/19, 199.16.156.0/22, 199.193.112.0/21, 199.59.148.0/22, 199.96.56.0/21, 2.16.102.0/23, 2.16.154.0/24, 2.16.16.0/23, 2.16.168.0/23, 2.16.172.0/23, 2.16.52.0/23, 2.17.251.0/24, 2.18.16.0/20, 2.18.64.0/20, 2.19.192.0/24, 2.19.204.0/22, 2.20.45.0/24, 2.21.244.0/23, 2.22.61.0/24, 2.23.144.0/20, 2.23.96.0/20, 202.160.0.0/15, 202.182.0.0/15, 202.52.0.0/14, 203.110.0.0/15, 205.186.128.0/18, 208.0.0.0/11, 208.101.0.0/18, 208.43.0.0/16, 208.77.40.0/21, 209.95.32.0/19, 210.0.0.0/7, 212.95.165.0/26, 213.155.157.0/24, 23.0.0.0/12, 23.192.0.0/11, 23.224.0.0/15, 23.234.0.0/18, 23.32.0.0/11, 23.72.0.0/13, 23.96.0.0/13, 31.13.64.0/18, 38.0.0.0/7, 4.0.0.0/9, 43.226.16.0/20, 45.114.8.0/21, 45.76.0.0/15, 47.88.0.0/14, 50.117.0.0/17, 50.22.0.0/15, 50.87.0.0/16, 52.0.0.0/10, 52.160.0.0/11, 54.224.0.0/11, 54.64.0.0/11, 57.0.0.0/8, 59.0.0.0/9, 59.160.0.0/11, 62.115.252.0/24, 62.115.253.0/24, 64.13.192.0/18, 65.49.0.0/17, 66.220.144.0/20, 67.15.0.0/16, 67.228.0.0/16, 67.230.160.0/19, 69.162.128.0/18, 69.171.224.0/19, 69.197.128.0/18, 69.30.0.0/18, 69.50.192.0/19, 69.63.176.0/20, 72.246.0.0/15, 74.86.0.0/16, 75.126.0.0/16, 80.67.82.0/24, 80.87.198.0/23, 88.191.249.0/24, 88.221.110.0/24, 88.221.111.0/24, 88.221.128.0/21, 92.122.100.0/22, 92.122.224.0/21, 92.123.96.0/20, 93.179.96.0/21, 95.100.128.0/20, 95.100.176.0/20, 95.101.108.0/22, 95.101.20.0/22, 95.101.35.0/24, 95.101.72.0/22, 95.101.76.0/22, 96.44.128.0/18, 98.159.96.0/20' },
-        { id: 'st6', ip: '100.24.0.0/13, 103.224.0.0/16, 104.16.0.0/12, 104.64.0.0/10, 107.20.0.0/14, 108.136.0.0/14, 108.156.0.0/14, 108.177.0.0/17, 13.208.0.0/12, 13.224.0.0/12, 13.248.0.0/14, 13.32.0.0/12, 136.143.176.0/20, 139.162.0.0/16, 142.250.0.0/15, 143.204.0.0/16, 15.184.0.0/14, 15.196.0.0/14, 152.228.128.0/17, 16.24.0.0/13, 172.104.0.0/15, 172.217.0.0/16, 172.64.0.0/13, 173.194.0.0/16, 173.222.0.0/15, 174.129.0.0/16, 18.128.0.0/9, 18.64.0.0/10, 184.24.0.0/13, 184.50.0.0/15, 184.72.0.0/15, 185.199.108.0/22, 185.53.177.0/24, 188.114.96.0/22, 192.155.80.0/20, 194.90.0.0/16, 199.59.240.0/22, 199.60.103.0/24, 2.19.16.0/20, 2.20.16.0/22, 2.20.208.0/20, 2.21.192.0/20, 2.22.128.0/20, 204.141.0.0/16, 204.236.128.0/17, 209.85.128.0/17, 216.137.32.0/19, 216.198.0.0/18, 216.58.192.0/19, 23.0.0.0/12, 23.192.0.0/11, 23.20.0.0/14, 23.239.0.0/19, 23.32.0.0/11, 23.64.0.0/14, 3.0.0.0/9, 3.128.0.0/9, 34.192.0.0/10, 34.64.0.0/10, 35.152.0.0/13, 35.160.0.0/12, 35.176.0.0/13, 37.59.32.0/19, 44.192.0.0/10, 50.16.0.0/14, 51.24.0.0/16, 51.91.18.0/24, 52.0.0.0/10, 52.192.0.0/12, 52.208.0.0/13, 52.222.0.0/16, 52.64.0.0/12, 52.84.0.0/14, 54.144.0.0/12, 54.160.0.0/11, 54.192.0.0/12, 54.208.0.0/13, 54.220.0.0/15, 54.224.0.0/11, 54.38.0.0/16, 54.64.0.0/11, 64.233.160.0/19, 65.8.0.0/14, 66.175.208.0/20, 67.202.0.0/18, 69.192.0.0/16, 72.44.32.0/19, 74.125.0.0/16, 74.207.224.0/19, 75.101.128.0/17, 8.0.0.0/13, 8.32.0.0/11, 88.221.68.0/22, 88.221.96.0/22, 92.122.12.0/22, 92.122.68.0/22, 92.123.160.0/21, 92.123.176.0/22, 95.100.224.0/20, 95.100.48.0/20, 95.213.180.0/23, 96.16.0.0/15, 96.6.0.0/15, 98.80.0.0/12, 99.83.128.0/17, 99.84.0.0/16, 99.86.0.0/16' },
+        { id: 'st6', ip: '100.24.0.0/13, 103.224.0.0/16, 104.16.0.0/12, 104.64.0.0/10, 107.20.0.0/14, 108.136.0.0/14, 108.156.0.0/14, 108.177.0.0/17, 13.208.0.0/12, 13.224.0.0/12, 13.248.0.0/14, 13.32.0.0/12, 136.143.176.0/20, 139.162.0.0/16, 142.250.0.0/15, 143.204.0.0/16, 15.184.0.0/14, 15.196.0.0/14, 152.228.128.0/17, 16.24.0.0/13, 172.104.0.0/15, 172.217.0.0/16, 172.64.0.0/13, 173.194.0.0/16, 173.222.0.0/15, 174.129.0.0/16, 18.128.0.0/9, 18.64.0.0/10, 184.24.0.0/13, 184.50.0.0/15, 184.72.0.0/15, 185.199.108.0/22, 185.53.177.0/24, 188.114.96.0/22, 192.155.80.0/20, 194.90.0.0/16, 199.59.240.0/22, 199.60.103.0/24, 2.19.16.0/20, 2.20.16.0/22, 2.20.208.0/20, 2.21.192.0/20, 2.22.128.0/20, 204.141.0.0/16, 204.236.128.0/17, 209.85.128.0/17, 216.137.32.0/19, 216.198.0.0/18, 216.58.192.0/19, 23.0.0.0/12, 23.192.0.0/11, 23.20.0.0/14, 23.239.0.0/19, 23.32.0.0/11, 23.64.0.0/14, 3.0.0.0/9, 3.128.0.0/9, 34.192.0.0/10, 34.64.0.0/10, 13, 37.59.32.0/19, 44.192.0.0/10, 50.16.0.0/14, 51.24.0.0/16, 51.91.18.0/24, 52.0.0.0/10, 52.192.0.0/12, 52.208.0.0/13, 52.222.0.0/16, 52.64.0.0/12, 52.84.0.0/14, 54.144.0.0/12, 54.160.0.0/11, 54.192.0.0/12, 54.208.0.0/13, 54.220.0.0/15, 54.224.0.0/11, 54.38.0.0/16, 54.64.0.0/11, 64.233.160.0/19, 65.8.0.0/14, 66.175.208.0/20, 67.202.0.0/18, 69.192.0.0/16, 72.44.32.0/19, 74.125.0.0/16, 74.207.224.0/19, 75.101.128.0/17, 8.0.0.0/13, 8.32.0.0/11, 88.221.68.0/22, 88.221.96.0/22, 92.122.12.0/22, 92.122.68.0/22, 92.123.160.0/21, 92.123.176.0/22, 95.100.224.0/20, 95.100.48.0/20, 95.213.180.0/23, 96.16.0.0/15, 96.6.0.0/15, 98.80.0.0/12, 99.83.128.0/17, 99.84.0.0/16, 99.86.0.0/16' },
         { id: 'st7', ip: '104.16.0.0/12, 162.158.0.0/15, 172.64.0.0/13, 185.81.128.0/23, 188.114.96.0/22' },
         { id: 'st8', ip: '162.19.0.0/16, 186.2.165.0/24, 188.124.37.0/24, 188.165.24.0/21, 54.36.0.0/15, 94.23.152.0/21, 95.129.232.0/24' },
         { id: 'st9', ip: '104.16.0.0/12, 172.64.0.0/13, 185.178.208.0/22, 49.13.80.0/20' },
         { id: 'st10', ip: '103.200.28.0/22, 103.214.160.0/20, 103.226.224.0/19, 103.228.130.0/23, 103.230.0.0/17, 103.240.180.0/22, 103.246.240.0/21, 103.252.96.0/19, 103.39.64.0/18, 103.42.0.0/16, 103.56.0.0/17, 103.73.160.0/21, 103.97.0.0/18, 103.97.128.0/18, 104.16.0.0/12, 104.244.40.0/21, 107.181.160.0/19, 108.160.160.0/20, 111.0.0.0/8, 114.0.0.0/10, 115.126.0.0/15, 116.64.0.0/10, 118.107.180.0/22, 118.128.0.0/9, 119.16.0.0/12, 122.0.0.0/10, 122.248.0.0/14, 124.0.0.0/9, 128.121.0.0/16, 128.242.0.0/16, 13.64.0.0/11, 130.211.0.0/16, 148.163.0.0/17, 150.107.0.0/18, 154.64.0.0/10, 156.233.0.0/16, 157.240.0.0/16, 159.106.0.0/16, 159.138.0.0/16, 159.65.0.0/16, 162.125.0.0/16, 162.220.8.0/21, 167.89.0.0/17, 168.143.0.0/16, 173.208.128.0/17, 173.231.0.0/18, 173.234.32.0/19, 173.236.128.0/17, 173.244.192.0/19, 173.252.192.0/18, 173.252.64.0/18, 173.255.192.0/18, 174.36.0.0/15, 179.60.0.0/16, 18.128.0.0/9, 182.0.0.0/9, 184.172.0.0/15, 184.72.0.0/15, 185.45.4.0/22, 185.60.216.0/22, 192.133.76.0/22, 198.27.64.0/18, 198.44.160.0/19, 199.16.156.0/22, 199.193.112.0/21, 199.59.148.0/22, 199.96.56.0/21, 20.64.0.0/10, 202.160.0.0/15, 202.182.0.0/15, 202.52.0.0/14, 203.110.0.0/15, 204.79.196.0/23, 205.186.128.0/18, 208.0.0.0/11, 208.101.0.0/18, 208.43.0.0/16, 208.77.40.0/21, 209.95.32.0/19, 210.0.0.0/7, 216.198.0.0/18, 23.224.0.0/15, 23.234.0.0/18, 23.96.0.0/13, 3.0.0.0/9, 31.13.64.0/18, 34.64.0.0/10, 35.208.0.0/12, 38.0.0.0/7, 4.0.0.0/9, 40.126.0.0/18, 43.226.16.0/20, 45.114.8.0/21, 45.76.0.0/15, 46.51.192.0/20, 47.88.0.0/14, 50.117.0.0/17, 50.22.0.0/15, 50.87.0.0/16, 52.0.0.0/10, 52.160.0.0/11, 52.224.0.0/11, 52.84.0.0/14, 54.216.0.0/14, 54.224.0.0/11, 54.64.0.0/11, 59.0.0.0/9, 59.160.0.0/11, 64.13.192.0/18, 65.49.0.0/17, 66.220.144.0/20, 67.15.0.0/16, 67.228.0.0/16, 67.230.160.0/19, 69.162.128.0/18, 69.171.224.0/19, 69.197.128.0/18, 69.30.0.0/18, 69.50.192.0/19, 69.63.176.0/20, 74.86.0.0/16, 75.126.0.0/16, 80.87.198.0/23, 88.191.249.0/24, 93.179.96.0/21, 96.44.128.0/18, 98.159.96.0/20' },
-		{ id: 'st11', ip: '104.16.0.0/12, 136.243.0.0/16, 146.255.0.0/16, 152.89.28.0/23, 162.255.116.0/22, 172.64.0.0/13, 176.58.38.0/23, 176.58.40.0/24, 176.58.41.0/24, 176.58.42.0/24, 176.58.45.0/24, 176.58.46.0/24, 176.58.48.0/23, 176.58.50.0/24, 176.58.54.0/24, 176.58.56.0/24, 176.58.57.0/24, 178.63.75.0/26, 179.32.0.0/12, 185.190.188.0/24, 185.190.190.0/24, 199.59.240.0/22, 199.80.52.0/22, 212.124.124.0/25, 212.124.96.0/24, 45.10.216.0/23, 5.45.76.0/22, 5.45.84.0/22, 5.9.51.64/27, 82.221.104.144/29, 82.221.105.0/24, 85.217.222.0/24, 89.105.207.64/26, 91.132.188.0/23' }
-		//{ id: 'st', ip: '' },//
-	];
+        { id: 'st11', ip: '104.16.0.0/12, 136.243.0.0/16, 146.255.0.0/16, 152.89.28.0/23, 162.255.116.0/22, 172.64.0.0/13, 176.58.38.0/23, 176.58.40.0/24, 176.58.41.0/24, 176.58.42.0/24, 176.58.45.0/24, 176.58.46.0/24, 176.58.48.0/23, 176.58.50.0/24, 176.58.54.0/24, 176.58.56.0/24, 176.58.57.0/24, 178.63.75.0/26, 179.32.0.0/12, 185.190.188.0/24, 185.190.190.0/24, 199.59.240.0/22, 199.80.52.0/22, 212.124.124.0/25, 212.124.96.0/24, 45.10.216.0/23, 5.45.76.0/22, 5.45.84.0/22, 5.9.51.64/27, 82.221.104.144/29, 82.221.105.0/24, 85.217.222.0/24, 89.105.207.64/26, 91.132.188.0/23' }
+    ];
 
     const selectedSites = sites.filter(site => document.getElementById(site.id).checked);
     
     if (selectedSites.length === 0) {
-        return "0.0.0.0/0, ::/0"; // default
+        return "0.0.0.0/0, ::/0";
     } else {
         const ips = selectedSites.map(site => site.ip).join(', ');
         return ips; 
     }
 }
 
+// Модальные окна
 const modal = document.getElementById("infoModal");
 const infoBtn = document.getElementById("infoButton");
 const span = document.getElementsByClassName("close")[0];
@@ -456,19 +553,25 @@ infoBtn.onclick = function() {
 
 span.onclick = function() {
     modal.style.display = "none";
-	modal2.style.display = "none";
+    modal2.style.display = "none";
 }
 
 span1.onclick = function() {
     modal.style.display = "none";
-	modal2.style.display = "none";
+    modal2.style.display = "none";
 }
+
 window.onclick = function(event) {
     if (event.target == modal) {
         modal.style.display = "none";
     }
-	if (event.target == modal2) {
+    if (event.target == modal2) {
         modal2.style.display = "none";
+    }
+    // Закрытие модального окна капчи по клику вне его
+    const captchaModal = document.getElementById('captchaModal');
+    if (event.target == captchaModal) {
+        closeCaptchaModal();
     }
 }
 
@@ -477,4 +580,14 @@ document.getElementById('copyThroneButton').addEventListener('click', function()
     const throneText = document.getElementById('throneText');
     throneText.select();
     document.execCommand('copy');
+    
+    // Показываем уведомление о копировании
+    const popup = document.createElement('div');
+    popup.className = 'popup-message';
+    popup.textContent = 'Скопировано!';
+    document.body.appendChild(popup);
+    
+    setTimeout(() => {
+        popup.remove();
+    }, 2500);
 });
