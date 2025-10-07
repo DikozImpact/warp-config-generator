@@ -18,7 +18,7 @@ function showCaptchaModal(action, endpoint, requestData = null) {
         if (hcaptchaWidgetId === null) {
             try {
                 hcaptchaWidgetId = hcaptcha.render(document.querySelector('.h-captcha'), {
-                    sitekey: 'YOUR_SITE_KEY' // Замените на ваш Site Key
+                    sitekey: '0cbe9fee-bd88-426c-b5ea-678c9ae465e6' // Замените на ваш Site Key
                 });
             } catch (e) {
                 console.error('Ошибка рендеринга hCaptcha:', e);
