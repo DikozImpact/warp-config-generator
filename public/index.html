@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -8,6 +7,7 @@
 	<meta name="description" content="Сайт для генерации бесплатной конфигурации Cloudflare WARP">
     <link rel="icon" href="/static/cloud.ico" type="image/x-icon">
     <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <script defer src="/static/script.js"></script>
     <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -170,6 +170,21 @@
    </div>
 </div>
 
+<!-- Модальное окно hCaptcha -->
+<div id="captchaModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <span class="close" id="closeCaptcha">&times;</span>
+        <h3 style="margin-bottom: 20px;">Подтвердите, что вы не робот</h3>
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <div class="h-captcha" data-sitekey="YOUR_SITE_KEY"></div>
+        </div>
+        <button id="verifyCaptchaButton" style="width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+            Подтвердить
+        </button>
+        <div id="captchaError" style="color: #d32f2f; margin-top: 10px; display: none;"></div>
+    </div>
+</div>
+
 <div id="ThroneModal" class="modal2">
     <div id="throne-content" class="modal-content2">
         <span id="close2" class="close">&times;</span>
@@ -178,4 +193,4 @@
 	</div>
 </div>
 
-</body>
+</body></html>

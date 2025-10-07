@@ -1,4 +1,5 @@
 const express = require('express');
+const { verify } = require('hcaptcha');
 const { getWarpConfigLink } = require('./AWGp');
 const { getWarpConfigLink2 } = require('./Karing');
 const { getWarpConfigLink3 } = require('./WarpInWarp');
@@ -13,19 +14,56 @@ const path = require('path');
 
 const app = express();
 
+// Добавляем middleware для обработки JSON
+app.use(express.json());
+
 // Подключаем статические файлы
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Секретный ключ hCaptcha (получите его на https://dashboard.hcaptcha.com/)
+const HCAPTCHA_SECRET = process.env.HCAPTCHA_SECRET || null;
+
+// Middleware для проверки hCaptcha
+async function verifyCaptcha(req, res, next) {
+    const token = req.body.captchaToken || req.query.captchaToken;
+    
+    if (!token) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Токен капчи отсутствует.' 
+        });
+    }
+
+    try {
+        const verification = await verify(HCAPTCHA_SECRET, token);
+        
+        if (verification.success) {
+            next();
+        } else {
+            res.status(400).json({ 
+                success: false, 
+                message: 'Проверка капчи не пройдена.' 
+            });
+        }
+    } catch (error) {
+        console.error('Ошибка проверки капчи:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Ошибка при проверке капчи.' 
+        });
+    }
+}
 
 // Главная страница
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Маршрут для генерации конфига
-app.get('/warps', async (req, res) => {
+// Маршруты для генерации конфигов с проверкой капчи
+app.post('/warps', verifyCaptcha, async (req, res) => {
     try {
-        const dns = req.query.dns || "1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001";
-        const allowedIPs = req.query.allowedIPs || "0.0.0.0/0, ::/0";
+        const dns = req.body.dns || "1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001";
+        const allowedIPs = req.body.allowedIPs || "0.0.0.0/0, ::/0";
         const content = await getWarpConfigLink(dns, allowedIPs);
         if (content) {
             res.json({ success: true, content });
@@ -38,7 +76,7 @@ app.get('/warps', async (req, res) => {
     }
 });
 
-app.get('/warp2', async (req, res) => {
+app.post('/warp2', verifyCaptcha, async (req, res) => {
     try {
         const content = await getWarpConfigLink2();
         if (content) {
@@ -52,7 +90,7 @@ app.get('/warp2', async (req, res) => {
     }
 });
 
-app.get('/warp3', async (req, res) => {
+app.post('/warp3', verifyCaptcha, async (req, res) => {
     try {
         const content = await getWarpConfigLink3();
         if (content) {
@@ -66,10 +104,10 @@ app.get('/warp3', async (req, res) => {
     }
 });
 
-app.get('/warp4s', async (req, res) => {
+app.post('/warp4s', verifyCaptcha, async (req, res) => {
     try {
-        const dns = req.query.dns || "1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001"; 
-        const allowedIPs = req.query.allowedIPs || "0.0.0.0/0, ::/0"; 
+        const dns = req.body.dns || "1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001"; 
+        const allowedIPs = req.body.allowedIPs || "0.0.0.0/0, ::/0"; 
         const content = await getWarpConfigLink4(dns, allowedIPs);
         if (content) {
             res.json({ success: true, content });
@@ -82,7 +120,7 @@ app.get('/warp4s', async (req, res) => {
     }
 });
 
-app.get('/warp5', async (req, res) => {
+app.post('/warp5', verifyCaptcha, async (req, res) => {
     try {
         const content = await getWarpConfigLink5();
         if (content) {
@@ -96,10 +134,10 @@ app.get('/warp5', async (req, res) => {
     }
 });
 
-app.get('/warp6s', async (req, res) => {
+app.post('/warp6s', verifyCaptcha, async (req, res) => {
     try {
-        const dns = req.query.dns || "1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001";
-        const allowedIPs = req.query.allowedIPs || "0.0.0.0/0, ::/0";
+        const dns = req.body.dns || "1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001";
+        const allowedIPs = req.body.allowedIPs || "0.0.0.0/0, ::/0";
         const content = await getWarpConfigLink6(dns, allowedIPs);
         if (content) {
             res.json({ success: true, content });
@@ -112,7 +150,7 @@ app.get('/warp6s', async (req, res) => {
     }
 });
 
-app.get('/warp7', async (req, res) => {
+app.post('/warp7', verifyCaptcha, async (req, res) => {
     try {
         const content = await getWarpConfigLink7();
         if (content) {
@@ -126,7 +164,7 @@ app.get('/warp7', async (req, res) => {
     }
 });
 
-app.get('/warp8', async (req, res) => {
+app.post('/warp8', verifyCaptcha, async (req, res) => {
     try {
         const content = await getWarpConfigLink8();
         if (content) {
@@ -140,7 +178,7 @@ app.get('/warp8', async (req, res) => {
     }
 });
 
-app.get('/warp9', async (req, res) => {
+app.post('/warp9', verifyCaptcha, async (req, res) => {
     try {
         const content = await getWarpConfigLink9();
         if (content) {
@@ -154,7 +192,7 @@ app.get('/warp9', async (req, res) => {
     }
 });
 
-app.get('/warp10', async (req, res) => {
+app.post('/warp10', verifyCaptcha, async (req, res) => {
     try {
         const content = await getWarpConfigLink10();
         if (content) {

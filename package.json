@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "vercel dev"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +16,7 @@
     "@vercel/speed-insights": "^1.0.12",
     "crypto": "^1.0.1",
     "express": "^4.21.1",
+    "hcaptcha": "^0.1.1",
     "node-fetch": "^2.7.0",
     "tweetnacl": "^1.0.3"
   }
