@@ -2,6 +2,7 @@
 let currentAction = null;
 let currentEndpoint = null;
 let pendingRequestData = null;
+let hcaptchaWidgetId = null;
 
 // Функция для показа модального окна капчи
 function showCaptchaModal(action, endpoint, requestData = null) {
@@ -13,13 +14,15 @@ function showCaptchaModal(action, endpoint, requestData = null) {
     modal.style.display = 'block';
     
     // Рендерим капчу если еще не отрендерена
-    if (hcaptchaWidgetId === null && typeof hcaptcha !== 'undefined') {
-        try {
-            hcaptchaWidgetId = hcaptcha.render(document.querySelector('.h-captcha'), {
-                sitekey: 'YOUR_SITE_KEY_HERE' // Замените на ваш Site Key
-            });
-        } catch (e) {
-            console.error('Ошибка рендеринга hCaptcha:', e);
+    if (typeof hcaptcha !== 'undefined') {
+        if (hcaptchaWidgetId === null) {
+            try {
+                hcaptchaWidgetId = hcaptcha.render(document.querySelector('.h-captcha'), {
+                    sitekey: 'YOUR_SITE_KEY' // Замените на ваш Site Key
+                });
+            } catch (e) {
+                console.error('Ошибка рендеринга hCaptcha:', e);
+            }
         }
     } else if (typeof hcaptcha !== 'undefined') {
         // Сбрасываем капчу если уже была отрендерена
@@ -47,7 +50,7 @@ document.getElementById('closeCaptcha').addEventListener('click', closeCaptchaMo
 
 // Обработчик кнопки подтверждения капчи
 document.getElementById('verifyCaptchaButton').addEventListener('click', async function() {
-    const captchaToken = hcaptcha.getResponse();
+    const captchaToken = hcaptcha.getResponse(hcaptchaWidgetId);
     const errorDiv = document.getElementById('captchaError');
     
     if (!captchaToken) {
@@ -57,11 +60,15 @@ document.getElementById('verifyCaptchaButton').addEventListener('click', async f
     }
     
     errorDiv.style.display = 'none';
+    
+    // Сохраняем action перед закрытием модалки
+    const actionToExecute = currentAction;
+    
     closeCaptchaModal();
     
     // Выполняем отложенное действие с токеном капчи
-    if (currentAction) {
-        await currentAction(captchaToken);
+    if (actionToExecute) {
+        await actionToExecute(captchaToken);
     }
 });
 
