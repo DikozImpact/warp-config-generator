@@ -97,7 +97,7 @@ I1 = <b 0xc2000000011419fa4bb3599f336777de79f81ca9a8d80d91eeec000044c635cef024a8
 [Peer]
 PublicKey = ${peer_pub}
 AllowedIPs = ${allowedIPs}
-Endpoint = engage.cloudflareclient.com:500`;
+Endpoint = engage.cloudflareclient.com:4500`;
 
     return conf;
 }
