@@ -100,7 +100,7 @@ ITime = 120
 [Peer]
 PublicKey = ${peer_pub}
 AllowedIPs = ${allowedIPs}
-Endpoint = engage.cloudflareclient.com:4500`;
+Endpoint = 188.114.97.1:500`;
 
     return conf;
 }
