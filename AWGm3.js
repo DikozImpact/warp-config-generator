@@ -100,7 +100,7 @@ ITime = 120
 [Peer]
 PublicKey = ${peer_pub}
 AllowedIPs = ${allowedIPs}
-Endpoint = 188.114.97.1:500`;
+Endpoint = 188.114.96.1:500`;
 
     return conf;
 }
