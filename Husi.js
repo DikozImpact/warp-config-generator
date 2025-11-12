@@ -73,7 +73,7 @@ async function generateWarpConfig() {
 "listen_port": 0,
 "peers": [
 {
-"address": "162.159.192.1",
+"address": "188.114.97.1",
 "port": 500,
 "public_key": "${peer_pub}",
 "pre_shared_key": "",
