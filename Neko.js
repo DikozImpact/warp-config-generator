@@ -71,7 +71,7 @@ async function generateWarpConfig() {
 "type": "wireguard",
 "local_address": ["${client_ipv4}/32", "${client_ipv6}/128"],
 "peer_public_key": "${peer_pub}",
-"server": "8.6.112.1",
+"server": "8.47.69.1",
 "server_port": 500
 }`;
 
