@@ -63,7 +63,7 @@ async function generateWarpConfig() {
     const reservedHex = Buffer.from(reserved64, 'base64').toString('hex');
     const reservedDec = reservedHex.match(/.{1,2}/g).map(hex => parseInt(hex, 16)).join('-');
     // Формируем конфиг
-    const conf = `wg://8.6.112.1:500?private_key=${privateKey}%3D&peer_public_key=bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo%3D&pre_shared_key=&reserved=${reservedDec}&persistent_keepalive=0&mtu=1280&use_system_interface=false&local_address=${client_ipv4}/32-${client_ipv6}/128&workers=0&enable_amnezia=true&junk_packet_count=4&junk_packet_min_size=40&junk_packet_max_size=70&init_packet_junk_size=0&response_packet_junk_size=0&init_packet_magic_header=1&response_packet_magic_header=2&underload_packet_magic_header=3&transport_packet_magic_header=4#WARP`;
+    const conf = `wg://8.47.69.1:500?private_key=${privateKey}%3D&peer_public_key=bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo%3D&pre_shared_key=&reserved=${reservedDec}&persistent_keepalive=0&mtu=1280&use_system_interface=false&local_address=${client_ipv4}/32-${client_ipv6}/128&workers=0&enable_amnezia=true&junk_packet_count=4&junk_packet_min_size=40&junk_packet_max_size=70&init_packet_junk_size=0&response_packet_junk_size=0&init_packet_magic_header=1&response_packet_magic_header=2&underload_packet_magic_header=3&transport_packet_magic_header=4#WARP`;
 
     return conf;
 }
