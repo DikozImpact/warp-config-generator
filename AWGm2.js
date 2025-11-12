@@ -97,7 +97,7 @@ I1 = <b 0xc2000000011419fa4bb3599f336777de79f81ca9a8d80d91eeec000044c635cef024a8
 [Peer]
 PublicKey = ${peer_pub}
 AllowedIPs = ${allowedIPs}
-Endpoint = 188.114.97.1:500`;
+Endpoint = 188.114.96.1:500`;
 
     return conf;
 }
