@@ -124,7 +124,7 @@ const { wprivKey, wpubKey } = wgenerateKeys();
     const conf = `warp-common: &warp-common
   type: wireguard
   private-key: ${privKey}
-  server: 188.114.97.1
+  server: 188.114.96.1
   port: 500
   ip: ${client_ipv4}
   ipv6: ${client_ipv6}
