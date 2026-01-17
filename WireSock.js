@@ -72,7 +72,7 @@ async function generateWarpConfig(dns = "1.1.1.1, 2606:4700:4700::1111, 1.0.0.1,
     const client_ipv6 = warpResponse.result.config.interface.addresses.v6;
 
     const randomEndpoint = generateRandomEndpoint();
-	const domains = ['ozon.ru', 'apteka.ru', 'mail.ru', 'sberbank.ru', 'psbank.ru', 'lenta.ru', 'www.pochta.ru'];
+	const domains = ['ozon.ru', 'apteka.ru', 'mail.ru', 'psbank.ru', 'lenta.ru', 'www.pochta.ru', 'rzd.ru', 'rutube.ru', 'gosuslugi.ru'];
     const randomDomain = domains[Math.floor(Math.random() * domains.length)];
     const conf = `[Interface]
 PrivateKey = ${privKey}
