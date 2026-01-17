@@ -53,6 +53,12 @@
 				<div class="header">
 					<img src="/static/WireSock.webp" alt="AmneziaWG Icon" class="amnezia-icon">
 					<span class="karing-text">WireSock</span>
+									<button id="infoButton2" class="info-button" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:Rkl9ukq:" data-state="closed">
+  <svg class="settings-btn" settings-btn width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+    <circle cx="12" cy="12" r="3"></circle>
+  </svg>
+	</button>
 				</div>
 				<button id="generateButton10"><span class="button__text">AWG 1.5</span></button>
 			</div>		
@@ -87,92 +93,129 @@
 
 <div id="infoModal" class="modal">
     <div class="modal-content">
-        <span class="close">&times;</span>	
-        <div class="modal-line">DNS (Только для Android)</div>
+        <span class="close">&times;</span>
+        <div class="modal-line">DNS</div>
         <div class="dnsinfo">
   <label class="payment-option">
     <div class="payment-option-content">1.1.1.1</div>
-    <input id="dns1" type="radio" name="payment" class="payment-radio" checked />
+    <input id="cf" type="radio" name="payment" class="payment-radio" checked />
+  </label>
+      <label class="payment-option">
+    <div class="payment-option-content">8.8.8.8</div>
+    <input id="google" type="radio" name="payment" class="payment-radio" />
   </label>
   <label class="payment-option">
     <div class="payment-option-content">dns.malw.link</div>
-    <input id="dns2" type="radio" name="payment" class="payment-radio" />
+    <input id="malw" type="radio" name="payment" class="payment-radio" />
   </label>
   <label class="payment-option">
     <div class="payment-option-content">xbox-dns.ru</div>
-    <input id="dns3" type="radio" name="payment" class="payment-radio" />
+    <input id="xbox" type="radio" name="payment" class="payment-radio" />
+  </label>
+    <label class="payment-option">
+    <div class="payment-option-content">geohide.ru</div>
+    <input id="geohide" type="radio" name="payment" class="payment-radio" />
+  </label>
+    <label class="payment-option">
+    <div class="payment-option-content">comss.one</div>
+    <input id="comss" type="radio" name="payment" class="payment-radio" />
   </label>
 </div>		
         
 		
-		<div class="modal-line">Сайты</div>
-   <div class="Sites">
+<div class="modal-line">Сайты</div>
+<div class="Sites">
   <label class="payment-option">
     <div class="payment-option-content">
       YouTube
     </div>
-    <input id="st1" type="checkbox" name="sites" class="payment-radio"/>
+    <input id="youtube" type="checkbox" name="sites" class="payment-radio"/>
   </label>
   <label class="payment-option">
     <div class="payment-option-content">
       Discord
     </div>
-    <input id="st2" type="checkbox" name="sites" class="payment-radio"/>
+    <input id="discord" type="checkbox" name="sites" class="payment-radio"/>
   </label>
     <label class="payment-option">
+    <div class="payment-option-content">
+      WhatsApp
+    </div>
+    <input id="whatsapp" type="checkbox" name="sites" class="payment-radio"/>
+  </label>
+    <label class="payment-option">
+    <div class="payment-option-content">
+      Telegram
+    </div>
+    <input id="telegram" type="checkbox" name="sites" class="payment-radio"/>
+  </label>
+  <label class="payment-option">
     <div class="payment-option-content">
       Twitter
     </div>
-    <input id="st3" type="checkbox" name="sites" class="payment-radio"/>
+    <input id="twitter" type="checkbox" name="sites" class="payment-radio"/>
   </label>
-    <label class="payment-option">
+  <label class="payment-option">
     <div class="payment-option-content">
       Instagram
     </div>
-    <input id="st4" type="checkbox" name="sites" class="payment-radio"/>
+    <input id="instagram" type="checkbox" name="sites" class="payment-radio"/>
   </label>
-    <label class="payment-option">
+  <label class="payment-option">
     <div class="payment-option-content">
       Facebook
     </div>
-    <input id="st5" type="checkbox" name="sites" class="payment-radio"/>
+    <input id="facebook" type="checkbox" name="sites" class="payment-radio"/>
   </label>
-    <label class="payment-option">
+  <label class="payment-option">
     <div class="payment-option-content">
       Viber
     </div>
-    <input id="st6" type="checkbox" name="sites" class="payment-radio"/>
-  </label>  <label class="payment-option">
+    <input id="viber" type="checkbox" name="sites" class="payment-radio"/>
+  </label>
+    <label class="payment-option">
+    <div class="payment-option-content">
+      Itch.io
+    </div>
+    <input id="itch" type="checkbox" name="sites" class="payment-radio"/>
+  </label>
+  <label class="payment-option">
     <div class="payment-option-content">
       RuTracker
     </div>
-    <input id="st7" type="checkbox" name="sites" class="payment-radio"/>
+    <input id="rutracker" type="checkbox" name="sites" class="payment-radio"/>
   </label>
     <label class="payment-option">
+    <div class="payment-option-content">
+      Rutor
+    </div>
+    <input id="rutor" type="checkbox" name="sites" class="payment-radio"/>
+  </label>
+    <label class="payment-option">
+    <div class="payment-option-content">
+      NNMClub
+    </div>
+    <input id="nnmclub" type="checkbox" name="sites" class="payment-radio"/>
+  </label>
+  <label class="payment-option">
     <div class="payment-option-content">
       BestChange
     </div>
-    <input id="st8" type="checkbox" name="sites" class="payment-radio"/>
+    <input id="bestchange" type="checkbox" name="sites" class="payment-radio"/>
   </label>
-    <label class="payment-option">
+  <label class="payment-option">
     <div class="payment-option-content">
       AnimeGo
     </div>
-    <input id="st9" type="checkbox" name="sites" class="payment-radio"/>
+    <input id="animego" type="checkbox" name="sites" class="payment-radio"/>
   </label>
-    <label class="payment-option">
-    <div class="payment-option-content">
-      Patreon
-    </div>
-    <input id="st10" type="checkbox" name="sites" class="payment-radio"/>
-  </label>
-   <label class="payment-option">
+  <label class="payment-option">
     <div class="payment-option-content">
       HDrezka
     </div>
-    <input id="st11" type="checkbox" name="sites" class="payment-radio"/>
+    <input id="hdrezka" type="checkbox" name="sites" class="payment-radio"/>
   </label>
-</div>	
+</div>
 	<div id="info2">IP-адреса взяты с <a id="link" href="https://iplist.opencck.org" target="_blank">iplist.opencck.org</a></div>
    </div>
 </div>
