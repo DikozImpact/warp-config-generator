@@ -405,12 +405,18 @@ document.getElementById('promoButton').onclick = function() {
 }
 
 function getSelectedDNS() {
-    if (document.getElementById('dns1').checked) {
+    if (document.getElementById('cf').checked) {
         return "1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001";
-    } else if (document.getElementById('dns2').checked) {
+    } else if (document.getElementById('malw').checked) {
         return "84.21.189.133, 2a12:bec4:1460:d5::2, 64.188.98.242, 2a01:ecc0:2c1:2::2";
-    } else if (document.getElementById('dns3').checked) {
-        return "176.99.11.77, 80.78.247.254, 2a00:f940:2:4:2::5d1b, 2a00:f940:2:4:2::21ed";
+    } else if (document.getElementById('xbox').checked) {
+        return "176.99.11.77, 80.78.247.254, 31.192.108.180, 2a00:f940:2:4:2::5d1b, 2a00:f940:2:4:2::21ed";
+	} else if (document.getElementById('geohide').checked) {
+        return "45.155.204.190, 95.182.120.241, 2a0c:9300:0:54::1";
+	} else if (document.getElementById('comss').checked) {
+        return "83.220.169.155, 212.109.195.93, 195.133.25.16, 2a01:230:4:915::2, 2a01:230:4:306::2";
+	} else if (document.getElementById('google').checked) {
+        return "8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844";	
     }
 }
 
@@ -447,13 +453,23 @@ function getSelectedSites() {
 
 const modal = document.getElementById("infoModal");
 const infoBtn = document.getElementById("infoButton");
+const infoBtn2 = document.getElementById("infoButton2");	
 const span = document.getElementsByClassName("close")[0];
 const span1 = document.getElementById("close2");
 const modal2 = document.getElementById("ThroneModal");
 
-infoBtn.onclick = function() {
+function openModal() {
     modal.style.display = "block";
 }
+
+// Первая кнопка (AmneziaWG)
+infoBtn.onclick = openModal;
+
+// Вторая кнопка (WireSock)
+if (infoBtn2) {
+    infoBtn2.onclick = openModal;
+}
+
 
 span.onclick = function() {
     modal.style.display = "none";
