@@ -1,5 +1,4 @@
-const path = require('path');
-const { getWarpConfigLink8 } = require(path.join(process.cwd(), 'Husi'));
+const { getWarpConfigLink8 } = require('./modules/Husi');
 
 exports.handler = async (event) => {
     try {
