@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "build": "echo 'Build complete'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -10,10 +11,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@vercel/analytics": "^1.3.2",
-    "@vercel/speed-insights": "^1.0.12",
-    "crypto": "^1.0.1",
-    "express": "^4.21.1",
     "node-fetch": "^2.7.0",
     "tweetnacl": "^1.0.3"
   }
