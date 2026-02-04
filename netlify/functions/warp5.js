@@ -1,5 +1,4 @@
-const path = require('path');
-const { getWarpConfigLink5 } = require(path.join(process.cwd(), 'Clash'));
+const { getWarpConfigLink5 } = require('./modules/Clash');
 
 exports.handler = async (event) => {
     try {
