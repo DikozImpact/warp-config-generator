@@ -1,5 +1,4 @@
-const path = require('path');
-const { getWarpConfigLink2 } = require(path.join(process.cwd(), 'AWGm1'));
+const { getWarpConfigLink2 } = require('./modules/AWGm1');
 
 exports.handler = async (event) => {
     try {
