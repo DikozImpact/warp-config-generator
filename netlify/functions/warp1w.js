@@ -1,6 +1,4 @@
-// Требуем файл AWG.js из корня проекта
-const path = require('path');
-const { getWarpConfigLink1 } = require(path.join(process.cwd(), 'AWG'));
+const { getWarpConfigLink1 } = require('./modules/AWG');
 
 exports.handler = async (event) => {
     try {
