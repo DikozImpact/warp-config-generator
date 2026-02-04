@@ -1,5 +1,4 @@
-const path = require('path');
-const { getWarpConfigLink10 } = require(path.join(process.cwd(), 'WireSock'));
+const { getWarpConfigLink10 } = require('./modules/WireSock');
 
 exports.handler = async (event) => {
     try {
