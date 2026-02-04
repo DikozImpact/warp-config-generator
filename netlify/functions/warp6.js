@@ -1,5 +1,4 @@
-const path = require('path');
-const { getWarpConfigLink6 } = require(path.join(process.cwd(), 'Throne'));
+const { getWarpConfigLink6 } = require('./modules/Throne');
 
 exports.handler = async (event) => {
     try {
