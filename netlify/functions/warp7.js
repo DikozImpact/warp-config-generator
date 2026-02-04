@@ -1,5 +1,4 @@
-const path = require('path');
-const { getWarpConfigLink7 } = require(path.join(process.cwd(), 'Neko'));
+const { getWarpConfigLink7 } = require('./modules/Neko');
 
 exports.handler = async (event) => {
     try {
