@@ -12,7 +12,7 @@ async function generateConfig1() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warp1w?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
+        const response = await fetch(`/.netlify/functions/warp1w?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
         const data = await response.json();
 
         if (data.success) {
@@ -52,7 +52,7 @@ async function generateConfig2() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warp2w?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
+        const response = await fetch(`/.netlify/functions/warp2w?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
         const data = await response.json();
 
         if (data.success) {
@@ -91,7 +91,7 @@ async function generateConfig3() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warp3w?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
+        const response = await fetch(`/.netlify/functions/warp3w?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
         const data = await response.json();
 
         if (data.success) {
@@ -130,7 +130,7 @@ async function generateConfig4() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warp4w?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
+        const response = await fetch(`/.netlify/functions/warp4w?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
         const data = await response.json();
 
         if (data.success) {
@@ -168,7 +168,7 @@ async function generateConfig5() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warp5`);
+        const response = await fetch(`/.netlify/functions/warp5`);
         const data = await response.json();
 
         if (data.success) {
@@ -206,7 +206,7 @@ async function generateConfig6() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warp6`);
+        const response = await fetch(`/.netlify/functions/warp6`);
         const data = await response.json();
 
         if (data.success) {
@@ -242,7 +242,7 @@ async function generateConfig7() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warp7`);
+        const response = await fetch(`/.netlify/functions/warp7`);
         const data = await response.json();
 
         if (data.success) {
@@ -278,7 +278,7 @@ async function generateConfig8() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warp8`);
+        const response = await fetch(`/.netlify/functions/warp8`);
         const data = await response.json();
 
         if (data.success) {
@@ -315,7 +315,7 @@ async function generateConfig9() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warp9`);
+        const response = await fetch(`/.netlify/functions/warp9`);
         const data = await response.json();
 
         if (data.success) {
@@ -355,7 +355,7 @@ async function generateConfig10() {
     button.classList.add("button--loading");
 
     try {
-        const response = await fetch(`/warp10w?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
+        const response = await fetch(`/.netlify/functions/warp10w?dns=${encodeURIComponent(selectedDNS)}&allowedIPs=${encodeURIComponent(allowedIPs)}`);
         const data = await response.json();
 
         if (data.success) {
